@@ -137,8 +137,10 @@ class Bomb(pg.sprite.Sprite):
         引数 screen：画面Surface
         """
         self.rect.move_ip(+self.speed*self.vx, +self.speed*self.vy)
-        if check_bound(self.rect) != (True, True):
-            self.kill()
+        if check_bound(self.rect) == (False, True):
+            self.vx *= -1
+        if check_bound(self.rect) == (True, False):
+            self.vy *= -1
 
 
 class Beam(pg.sprite.Sprite):
