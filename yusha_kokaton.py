@@ -211,7 +211,7 @@ class Enemy(pg.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = random.randint(0, WIDTH), 0
         self.vy = +6
-        self.bound = random.randint(50, HEIGHT/2)  # 停止位置
+        self.bound = random.randint(50, HEIGHT-10)  # 停止位置
         self.state = "down"  # 降下状態or停止状態
         self.interval = random.randint(50, 300)  # 爆弾投下インターバル
 
