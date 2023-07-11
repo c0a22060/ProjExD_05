@@ -196,6 +196,7 @@ class Explosion(pg.sprite.Sprite):
         self.life -= 1
         self.image = self.imgs[self.life//10%2]
         if self.life < 0:
+            
             self.kill()
 
 
@@ -249,10 +250,29 @@ class Score:
         screen.blit(self.image, self.rect)
 
 
+class Point(pg.sprite.Sprite):
+    def __init__(self, obj: "Bomb|Enemy", life: int):
+        """
+        相手からポイントを落とす関数
+        """
+        super().__init__()
+        img = pg.transform.rotozoom(pg.image.load("ex05/fig/food_yakitori.png"), 0, 0.2)
+        self.imgs = [img, pg.transform.flip(img, 1, 0)]
+        self.image = self.imgs[0]
+        self.rect = self.image.get_rect(center=obj.rect.center)
+        self.life = 0
+
+    def update(self):
+        self.life += 1
+        self.image = self.imgs[self.life//50%2]
+        
+
+
 def main():
     pg.display.set_caption("勇者こうかとん")
     screen = pg.display.set_mode((WIDTH, HEIGHT))
-    bg_img = pg.image.load("ex04/fig/pg_bg.jpg")
+    bg_img = pg.image.load("ex05/fig/pg_bg.jpg")
+    bg_img2 = pg.transform.flip(bg_img, True, False)
     score = Score()
 
     bird = Bird(3, (900, 400))
@@ -260,7 +280,9 @@ def main():
     beams = pg.sprite.Group()
     exps = pg.sprite.Group()
     emys = pg.sprite.Group()
+    points = pg.sprite.Group()
 
+    x = 0
     tmr = 0
     clock = pg.time.Clock()
     while True:
@@ -270,7 +292,9 @@ def main():
                 return 0
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
                 beams.add(Beam(bird))
-        screen.blit(bg_img, [0, 0])
+        screen.blit(bg_img2, [1600 -x, 0])
+        screen.blit(bg_img, [3199 -x, 0])
+        screen.blit(bg_img, [-x, 0])
 
         if tmr%200 == 0:  # 200フレームに1回，敵機を出現させる
             emys.add(Enemy())
@@ -282,12 +306,15 @@ def main():
 
         for emy in pg.sprite.groupcollide(emys, beams, True, True).keys():
             exps.add(Explosion(emy, 100))  # 爆発エフェクト
-            score.score_up(10)  # 10点アップ
+            points.add(Point(emy, 0))
             bird.change_img(6, screen)  # こうかとん喜びエフェクト
 
         for bomb in pg.sprite.groupcollide(bombs, beams, True, True).keys():
             exps.add(Explosion(bomb, 50))  # 爆発エフェクト
             score.score_up(1)  # 1点アップ
+
+        if len(pg.sprite.spritecollide(bird, points, True)) != 0:
+            score.score_up(10)  # 10点アップ
 
         if len(pg.sprite.spritecollide(bird, bombs, True)) != 0:
             bird.change_img(8, screen) # こうかとん悲しみエフェクト
@@ -303,12 +330,18 @@ def main():
         emys.draw(screen)
         bombs.update()
         bombs.draw(screen)
+        points.update()
+        points.draw(screen)
         exps.update()
         exps.draw(screen)
         score.update(screen)
         pg.display.update()
         tmr += 1
         clock.tick(50)
+
+        x += 1
+        if x > 3199:
+            x = 0
 
 
 if __name__ == "__main__":
