@@ -78,7 +78,7 @@ class Bird(pg.sprite.Sprite):
         引数1 num：こうかとん画像ファイル名の番号
         引数2 screen：画面Surface
         """
-        self.image = pg.transform.rotozoom(pg.image.load(f"ex04/fig/{num}.png"), 0, 2.0)
+        self.image = pg.transform.rotozoom(pg.image.load(f"ex04/fig/{num}.png"), 0, 1.5)
         screen.blit(self.image, self.rect)
 
     def update(self, key_lst: list[bool], screen: pg.Surface):
@@ -307,6 +307,7 @@ def main():
     points = pg.sprite.Group()
     shields = pg.sprite.Group()
 
+    mode = 0
     cooltime = 0
     tmr = 0
     clock = pg.time.Clock()
@@ -322,11 +323,19 @@ def main():
 
         if tmr%200 == 0:  # 200フレームに1回，敵機を出現させる
             emys.add(Enemy())
+            mode += 1
+        if mode >= 10 and tmr%300 == 0:
+            emys.add(Enemy())
+        if mode >= 20 and tmr%350 == 0:
+            emys.add(Enemy())
 
         for emy in emys:
             if emy.state == "stop" and tmr%emy.interval == 0:
                 # 敵機が停止状態に入ったら，intervalに応じて爆弾投下
                 bombs.add(Bomb(emy, bird))
+            if event.type == pg.KEYDOWN and event.key == pg.K_TAB and score.score >= 50:
+                shields.add(Shield(bird))
+                score.score -= 50
 
         for emy in pg.sprite.groupcollide(emys, beams, True, True).keys():
             exps.add(Explosion(emy, 100))  # 爆発エフェクト
