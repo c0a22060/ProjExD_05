@@ -71,6 +71,8 @@ class Bird(pg.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = xy
         self.speed = 10
+        self.max_hp = 3  # 最大HP
+        self.hp = self.max_hp  # 現在のHP
 
     def change_img(self, num: int, screen: pg.Surface):
         """
@@ -101,10 +103,16 @@ class Bird(pg.sprite.Sprite):
             self.dire = tuple(sum_mv)
             self.image = self.imgs[self.dire]
         screen.blit(self.image, self.rect)
-    
+
     def get_direction(self) -> tuple[int, int]:
         return self.dire
-    
+
+    def decrease_hp(self):
+        self.hp -= 1
+
+    def is_dead(self) -> bool:
+        return self.hp <= 0
+
 
 class Bomb(pg.sprite.Sprite):
     """
@@ -119,14 +127,14 @@ class Bomb(pg.sprite.Sprite):
         引数2 bird：攻撃対象のこうかとん
         """
         super().__init__()
-        rad = 10  # 爆弾円の半径
+        rad = random.randint(10, 50)  # 爆弾円の半径：10以上50以下の乱数
         color = random.choice(__class__.colors)  # 爆弾円の色：クラス変数からランダム選択
         self.image = pg.Surface((2*rad, 2*rad))
         pg.draw.circle(self.image, color, (rad, rad), rad)
         self.image.set_colorkey((0, 0, 0))
         self.rect = self.image.get_rect()
         # 爆弾を投下するemyから見た攻撃対象のbirdの方向を計算
-        self.vx, self.vy = calc_orientation(emy.rect, bird.rect)  
+        self.vx, self.vy = calc_orientation(emy.rect, bird.rect)
         self.rect.centerx = emy.rect.centerx
         self.rect.centery = emy.rect.centery+emy.rect.height/2
         self.speed = 6
@@ -204,7 +212,7 @@ class Enemy(pg.sprite.Sprite):
     敵機に関するクラス
     """
     imgs = [pg.image.load(f"ex04/fig/alien{i}.png") for i in range(1, 4)]
-    
+
     def __init__(self):
         super().__init__()
         self.image = random.choice(__class__.imgs)
@@ -249,13 +257,32 @@ class Score:
         screen.blit(self.image, self.rect)
 
 
+class HPBar:
+    """
+    HPバーを表示するクラス
+    """
+    def __init__(self, bird: Bird):
+        self.bird = bird
+        self.max_width = 200  # HPバーの最大幅
+        self.height = 20  # HPバーの高さ
+        self.rect = pg.Rect((100, 50, self.max_width, self.height))
+        self.color = (0, 0, 255)  # HPバーの色
+
+    def update(self, screen: pg.Surface):
+        hp_ratio = self.bird.hp / self.bird.max_hp
+        width = int(self.max_width * hp_ratio)
+        self.rect.width = width
+        pg.draw.rect(screen, self.color, self.rect)
+
+
 def main():
-    pg.display.set_caption("勇者こうかとん")
+    pg.display.set_caption("真！こうかとん無双")
     screen = pg.display.set_mode((WIDTH, HEIGHT))
     bg_img = pg.image.load("ex04/fig/pg_bg.jpg")
     score = Score()
 
     bird = Bird(3, (900, 400))
+    hp_bar = HPBar(bird)
     bombs = pg.sprite.Group()
     beams = pg.sprite.Group()
     exps = pg.sprite.Group()
@@ -290,13 +317,16 @@ def main():
             score.score_up(1)  # 1点アップ
 
         if len(pg.sprite.spritecollide(bird, bombs, True)) != 0:
-            bird.change_img(8, screen) # こうかとん悲しみエフェクト
-            score.update(screen)
-            pg.display.update()
-            time.sleep(2)
-            return
+            bird.decrease_hp()
+            if bird.is_dead():
+                bird.change_img(8, screen)  # こうかとん悲しみエフェクト
+                score.update(screen)
+                pg.display.update()
+                time.sleep(2)
+                return
 
         bird.update(key_lst, screen)
+        hp_bar.update(screen)
         beams.update()
         beams.draw(screen)
         emys.update()
