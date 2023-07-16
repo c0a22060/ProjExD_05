@@ -17,12 +17,20 @@
 * スコアに関するクラス
 
 ### 担当追加機能
-* タイトル
-* 剣を振る
-* HPゲージ
-* ビーム制限付き
-* 新手の敵
+* 敵に関するクラス
 ### ToDo
+class BOSS 一定数の敵を倒したら新しい敵の実装
+imgs = pg.image.load(f"ProjExd_05/fig/UFO_BOSS.png")（235行目画像の読み込み）
+self.hp = 3（このクラス内での敵のhpの実装）
+if self.hp == 0:　（行目敵のhpがゼロになったら）
+for emy in pg.sprite.groupcollide(emys, beams, True, True).keys():
+            exps.add(Explosion(emy, 100))  # 爆発エフェクト
+            score.score_up(10)  # 10点アップ
+            bird.change_img(6, screen)  # こうかとん喜びエフェクト
+            ten+=1　　　（敵を倒したら変数に＋１）
+if ten%2 == 0 and ten != 0:（％2の部分に何体倒したらボスが出るかの数）
+            bosses.add(BOSS())
+            ten+=1（ボスを倒しても次に出てくるまでの数にカウントされる）
 ### メモ
 * クラス内の変数は，すべて，「get_変数名」という名前のメソッドを介してアクセスするように設計してある
 * すべてのクラスに関係する関数は，クラスの外で定義してある

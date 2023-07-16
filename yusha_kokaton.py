@@ -137,8 +137,10 @@ class Bomb(pg.sprite.Sprite):
         引数 screen：画面Surface
         """
         self.rect.move_ip(+self.speed*self.vx, +self.speed*self.vy)
+        
         if check_bound(self.rect) != (True, True):
             self.kill()
+            
 
 
 class Beam(pg.sprite.Sprite):
@@ -168,6 +170,7 @@ class Beam(pg.sprite.Sprite):
         """
         self.rect.move_ip(+self.speed*self.vx, +self.speed*self.vy)
         if check_bound(self.rect) != (True, True):
+            
             self.kill()
 
 
@@ -225,7 +228,33 @@ class Enemy(pg.sprite.Sprite):
             self.vy = 0
             self.state = "stop"
         self.rect.centery += self.vy
+        
 
+class BOSS(pg.sprite.Sprite):
+    def __init__(self):
+        imgs = pg.image.load(f"ProjExd_05/fig/UFO_BOSS.png")
+        imgs = pg.transform.scale(imgs,(300,300))
+        super().__init__()
+        self.hp = 3
+        self.image = imgs
+        self.rect = self.image.get_rect()
+        self.rect.center = random.randint(0, WIDTH), 0
+        self.vy = +6
+        self.bound = random.randint(50, HEIGHT/2) 
+        self.state = "down"  
+        self.interval = random.randint(50, 300)
+    def update(self):
+        if self.rect.centery > self.bound:
+            self.vy = 0
+            self.state = "stop"
+        self.rect.centery += self.vy
+        if self.hp == 0:
+            self.kill()
+            
+    def hp_set(self, num):
+        self.hp += num
+
+    
 
 class Score:
     """
@@ -250,6 +279,7 @@ class Score:
 
 
 def main():
+    ten=0
     pg.display.set_caption("勇者こうかとん")
     screen = pg.display.set_mode((WIDTH, HEIGHT))
     bg_img = pg.image.load("ex04/fig/pg_bg.jpg")
@@ -260,6 +290,7 @@ def main():
     beams = pg.sprite.Group()
     exps = pg.sprite.Group()
     emys = pg.sprite.Group()
+    bosses = pg.sprite.Group()
 
     tmr = 0
     clock = pg.time.Clock()
@@ -274,6 +305,16 @@ def main():
 
         if tmr%200 == 0:  # 200フレームに1回，敵機を出現させる
             emys.add(Enemy())
+            
+        if ten%2 == 0 and ten != 0:
+            bosses.add(BOSS())
+            ten+=1
+            
+        for boss in bosses:
+            if boss.state == "stop" and tmr%emy.interval == 0:
+                # 敵機が停止状態に入ったら，intervalに応じて爆弾投下
+                bombs.add(Bomb(boss, bird))
+        
 
         for emy in emys:
             if emy.state == "stop" and tmr%emy.interval == 0:
@@ -284,9 +325,20 @@ def main():
             exps.add(Explosion(emy, 100))  # 爆発エフェクト
             score.score_up(10)  # 10点アップ
             bird.change_img(6, screen)  # こうかとん喜びエフェクト
+            ten+=1
+        
+        for boss in pg.sprite.groupcollide(bosses, beams, False, True).keys():
+            boss.hp_set(-1)
+            print("a")
+            
+        # for boss in pg.sprite.groupcollide(bosses, beams, True, True).keys():
+            
+        #     exps.add(Explosion(boss, 100))  # 爆発エフェクト
+        #     score.score_up(10)  # 10点アップ
+        #     bird.change_img(6, screen)  # こうかとん喜びエフェクト
 
         for bomb in pg.sprite.groupcollide(bombs, beams, True, True).keys():
-            exps.add(Explosion(bomb, 50))  # 爆発エフェクト
+            exps.add(Explosion(bomb, 100))  # 爆発エフェクト
             score.score_up(1)  # 1点アップ
 
         if len(pg.sprite.spritecollide(bird, bombs, True)) != 0:
@@ -301,11 +353,14 @@ def main():
         beams.draw(screen)
         emys.update()
         emys.draw(screen)
+        bosses.update()
+        bosses.draw(screen)
         bombs.update()
         bombs.draw(screen)
         exps.update()
         exps.draw(screen)
         score.update(screen)
+        
         pg.display.update()
         tmr += 1
         clock.tick(50)
