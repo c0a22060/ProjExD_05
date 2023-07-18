@@ -170,6 +170,37 @@ class Beam(pg.sprite.Sprite):
         if check_bound(self.rect) != (True, True):
             self.kill()
 
+class Sword(pg.sprite.Sprite):
+    """
+    剣に関するクラス
+    """
+    def __init__(self, bird: Bird, life: int):
+        """
+        剣画像surfaceを生成する
+        引数1 bird: 剣を振るこうかとん
+        引数2 life: 剣をしまう時間
+        """
+        super().__init__()
+        self.vx, self.vy = bird.get_direction()
+        angle = math.degrees(math.atan2(-self.vy, self.vx))
+        self.image = pg.transform.rotozoom(pg.image.load("ex05/fig/sword-3.png"), angle, 0.4)
+        self.vx = math.cos(math.radians(angle))
+        self.vy = -math.sin(math.radians(angle))
+        self.rect = self.image.get_rect()
+        self.rect.centery = bird.rect.centery+bird.rect.height*self.vy
+        self.rect.centerx = bird.rect.centerx+bird.rect.width*self.vx
+        self.life=life
+    def update(self,bird: Bird):
+        """
+        剣をこうかとんの移動量に合わせて移動させる
+        時間がたったら剣をしまうようにする
+        引数1 bird: 剣の向き
+        """
+        self.rect.centery = bird.rect.centery+bird.rect.height*self.vy
+        self.rect.centerx = bird.rect.centerx+bird.rect.width*self.vx
+        self.life -= 1
+        if self.life < 0:
+            self.kill()
 
 class Sword(pg.sprite.Sprite):
     """
