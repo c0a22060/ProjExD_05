@@ -235,9 +235,9 @@ class Enemy(pg.sprite.Sprite):
 class BOSS(pg.sprite.Sprite):
     def __init__(self):
         imgs = pg.image.load(f"ProjExd_05/fig/UFO_BOSS.png")
-        imgs = pg.transform.scale(imgs,(300,300))
+        imgs = pg.transform.scale(imgs,(150,150))
         super().__init__()
-        self.hp = 3
+        self.hp = 2
         self.image = imgs
         self.rect = self.image.get_rect()
         self.rect.center = random.randint(0, WIDTH), 0
@@ -245,6 +245,8 @@ class BOSS(pg.sprite.Sprite):
         self.bound = random.randint(50, HEIGHT/2) 
         self.state = "down"  
         self.interval = random.randint(50, 300)
+        self.move = 3
+        self.move_sum = 0
     def update(self):
         if self.rect.centery > self.bound:
             self.vy = 0
@@ -252,11 +254,21 @@ class BOSS(pg.sprite.Sprite):
         self.rect.centery += self.vy
         if self.hp == 0:
             self.kill()
+        if self.state == "stop":
+            self.rect.centery += self.move
+            self.move_sum += self.move
+        if self.move_sum >= 150:
+            self.move = -3
+            self.move_sum = 0
+        if self.move_sum <= -150:
+            self.move = 3
+            self.move_sum = 0
+        
             
     def hp_set(self, num):
         self.hp += num
 
-    
+
 
 class Score:
     """
