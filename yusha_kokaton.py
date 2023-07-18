@@ -257,7 +257,7 @@ class Score:
         screen.blit(self.image, self.rect)
 
 
-class HPBar:
+class HPBar: 
     """
     HPバーを表示するクラス
     """
