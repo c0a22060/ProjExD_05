@@ -178,7 +178,7 @@ class Sword(pg.sprite.Sprite):
     def __init__(self, bird: Bird, life: int):
         """
         剣画像surfaceを生成する
-        引数1 bird: 剣を使うこうかとん
+        引数1 bird: 剣を振るこうかとん
         引数2 life: 剣をしまう時間
         """
         super().__init__()
