@@ -17,7 +17,6 @@
 * スコアに関するクラス
 
 ### 担当追加機能
-<<<<<<< HEAD
 * 敵に関するクラス
 class BOSS 一定数の敵を倒したら新しい敵の実装
 imgs = pg.image.load(f"ProjExd_05/fig/UFO_BOSS.png")（画像の読み込み）
@@ -31,14 +30,12 @@ for emy in pg.sprite.groupcollide(emys, beams, True, True).keys():
 if ten%2 == 0 and ten != 0:  （％2の部分に何体倒したらボスが出るかの数）
             bosses.add(BOSS())
             ten+=1（ボスを倒しても次に出てくるまでの数にカウントされる）
-=======
 * タイトル(担当:小林航流):タイトル画面からENTERを押すことによってゲームが開始される機能
-* 剣を振る
+* 剣を振る（担当：三反田）：左shiftを押した際に、こうかとんが剣を振るクラス
 * HPゲージ
 * ビーム制限付き
 * 新手の敵
 * HPバーの追加（担当：丸尾歩暉）:三回攻撃を受けたらやられるHPバーの追加機能
->>>>>>> bf3bb5dbc1c44ceef6014a2d117a1cf85a44d410
 ### ToDo
 
 ### メモ
