@@ -141,7 +141,6 @@ class Bomb(pg.sprite.Sprite):
             self.kill()
 
 
-
 class Beam(pg.sprite.Sprite):
     """
     ビームに関するクラス
@@ -171,6 +170,7 @@ class Beam(pg.sprite.Sprite):
         if check_bound(self.rect) != (True, True):
             self.kill()
 
+
 class Sword(pg.sprite.Sprite):
     """
     剣に関するクラス
@@ -184,7 +184,7 @@ class Sword(pg.sprite.Sprite):
         super().__init__()
         self.vx, self.vy = bird.get_direction()
         angle = math.degrees(math.atan2(-self.vy, self.vx))
-        self.image = pg.transform.rotozoom(pg.image.load("ex05/fig/sword-3.png"), angle, 0.3)
+        self.image = pg.transform.rotozoom(pg.image.load("ex05/fig/sword-3.png"), angle, 0.4)
         self.vx = math.cos(math.radians(angle))
         self.vy = -math.sin(math.radians(angle))
         self.rect = self.image.get_rect()
@@ -202,6 +202,7 @@ class Sword(pg.sprite.Sprite):
         self.life -= 1
         if self.life < 0:
             self.kill()
+
 
 class Explosion(pg.sprite.Sprite):
     """
@@ -323,10 +324,12 @@ def main():
             exps.add(Explosion(bomb, 50))  # 爆発エフェクト
             score.score_up(1)  # 1点アップ
 
-        for sword in pg.sprite.groupcollide(swords, emys, True, True).keys():
-            sword.kill()
-        for swordb in pg.sprite.groupcollide(swords, bombs,True, True).keys():
-            swordb.kill()
+        for emy in pg.sprite.groupcollide(emys, swords, True, False).keys():
+            exps.add(Explosion(emy, 100))  # 爆発エフェクト
+            score.score_up(10)
+        for bomb in pg.sprite.groupcollide(bombs, swords,True, False).keys():
+            exps.add(Explosion(bomb, 50))  # 爆発エフェクト
+            score.score_up(1)
         if len(pg.sprite.spritecollide(bird, bombs, True)) != 0:
             bird.change_img(8, screen) # こうかとん悲しみエフェクト
             score.update(screen)
