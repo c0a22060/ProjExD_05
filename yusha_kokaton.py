@@ -314,12 +314,13 @@ def main():
             if boss.state == "stop" and tmr%emy.interval == 0:
                 # 敵機が停止状態に入ったら，intervalに応じて爆弾投下
                 bombs.add(Bomb(boss, bird))
-        
+                
 
         for emy in emys:
             if emy.state == "stop" and tmr%emy.interval == 0:
                 # 敵機が停止状態に入ったら，intervalに応じて爆弾投下
                 bombs.add(Bomb(emy, bird))
+                
 
         for emy in pg.sprite.groupcollide(emys, beams, True, True).keys():
             exps.add(Explosion(emy, 100))  # 爆発エフェクト
@@ -329,6 +330,7 @@ def main():
         
         for boss in pg.sprite.groupcollide(bosses, beams, False, True).keys():
             boss.hp_set(-1)
+            exps.add(Explosion(boss, 100))
             print("a")
             
         # for boss in pg.sprite.groupcollide(bosses, beams, True, True).keys():

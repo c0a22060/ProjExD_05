@@ -18,7 +18,6 @@
 
 ### 担当追加機能
 * 敵に関するクラス
-### ToDo
 class BOSS 一定数の敵を倒したら新しい敵の実装
 imgs = pg.image.load(f"ProjExd_05/fig/UFO_BOSS.png")（画像の読み込み）
 self.hp = 3（このクラス内での敵のhpの実装）
@@ -31,6 +30,8 @@ for emy in pg.sprite.groupcollide(emys, beams, True, True).keys():
 if ten%2 == 0 and ten != 0:  （％2の部分に何体倒したらボスが出るかの数）
             bosses.add(BOSS())
             ten+=1（ボスを倒しても次に出てくるまでの数にカウントされる）
+### ToDo
+
 ### メモ
 * クラス内の変数は，すべて，「get_変数名」という名前のメソッドを介してアクセスするように設計してある
 * すべてのクラスに関係する関数は，クラスの外で定義してある
