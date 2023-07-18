@@ -258,6 +258,22 @@ class Score:
         self.image = self.font.render(f"Score: {self.score}", 0, self.color)
         screen.blit(self.image, self.rect)
 
+class HPBar:
+    """
+    HPバーを表示するクラス
+    """
+    def __init__(self, bird: Bird):
+        self.bird = bird
+        self.max_width = 200  # HPバーの最大幅
+        self.height = 20  # HPバーの高さ
+        self.rect = pg.Rect((100, 50, self.max_width, self.height))
+        self.color = (0, 0, 255)  # HPバーの色
+
+    def update(self, screen: pg.Surface):
+        hp_ratio = self.bird.hp / self.bird.max_hp
+        width = int(self.max_width * hp_ratio)
+        self.rect.width = width
+        pg.draw.rect(screen, self.color, self.rect)
 
 class Point(pg.sprite.Sprite):
     def __init__(self, obj: "Bomb|Enemy", life: int, size):
@@ -345,7 +361,7 @@ class Cooltime:
 
     def update(self, screen: pg.Surface, tmr, bird: Bird):
         """
-        時間によって形と色が変わる四角形を表示する
+        時間によって形と色が変わる四角形を表示する.
         """
         self.rectx, self.recty = bird.rect.bottomleft
         self.recty += 10
@@ -472,13 +488,20 @@ def main():
 
         if len(pg.sprite.spritecollide(bird, points, True)) != 0:
             score.score_up(10)  # 10点アップ
-
+            if bird.is_dead():
+                bird.change_img(8, screen)  # こうかとん悲しみエフェクト
+                score.update(screen)
+                pg.display.update()
+                time.sleep(2)
+                return
         if len(pg.sprite.spritecollide(bird, bombs, True)) != 0:
-            bird.change_img(8, screen) # こうかとん悲しみエフェクト
-            score.update(screen)
-            pg.display.update()
-            time.sleep(2)
-            return
+            bird.decrease_hp()
+            if bird.is_dead():
+                bird.change_img(8, screen)  # こうかとん悲しみエフェクト
+                score.update(screen)
+                pg.display.update()
+                time.sleep(2)
+                return
         
         for shield in pg.sprite.groupcollide(shields, bombs, False, True).keys():
             Shield.life_change(shield, 1)
