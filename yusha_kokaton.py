@@ -181,6 +181,39 @@ class Beam(pg.sprite.Sprite):
             
             self.kill()
 
+class Sword(pg.sprite.Sprite):
+    """
+    剣に関するクラス
+    """
+    def __init__(self, bird: Bird, life: int):
+        """
+        剣画像surfaceを生成する
+        引数1 bird: 剣を振るこうかとん
+        引数2 life: 剣をしまう時間
+        """
+        super().__init__()
+        self.vx, self.vy = bird.get_direction()
+        angle = math.degrees(math.atan2(-self.vy, self.vx))
+        self.image = pg.transform.rotozoom(pg.image.load("ex05/fig/sword-3.png"), angle, 0.4)
+        self.vx = math.cos(math.radians(angle))
+        self.vy = -math.sin(math.radians(angle))
+        self.rect = self.image.get_rect()
+        self.rect.centery = bird.rect.centery+bird.rect.height*self.vy
+        self.rect.centerx = bird.rect.centerx+bird.rect.width*self.vx
+        self.life=life
+    def update(self,bird: Bird):
+        """
+        剣をこうかとんの移動量に合わせて移動させる
+        時間がたったら剣をしまうようにする
+        引数1 bird: 剣の向き
+        """
+        self.rect.centery = bird.rect.centery+bird.rect.height*self.vy
+        self.rect.centerx = bird.rect.centerx+bird.rect.width*self.vx
+        self.life -= 1
+        if self.life < 0:
+            self.kill()
+
+
 
 class Explosion(pg.sprite.Sprite):
     """
@@ -240,7 +273,7 @@ class Enemy(pg.sprite.Sprite):
 
 class BOSS(pg.sprite.Sprite):
     def __init__(self):
-        imgs = pg.image.load(f"ProjExd_05/fig/UFO_BOSS.png")
+        imgs = pg.image.load(f"ex05/fig/UFO_BOSS.png")
         imgs = pg.transform.scale(imgs,(150,150))
         super().__init__()
         self.hp = 2
@@ -414,7 +447,7 @@ class Cooltime:
             elif self.cooltime > 20:
                 self.color = self.colors[1]
                 pg.draw.rect(screen, self.color, (self.rectx, self.recty, self.cooltime, 5))
-        if self.view + 50 >= tmr:
+        if self.view + 50 >= tmr and Cooltime ==0:
             self.color = self.colors[2]
             pg.draw.rect(screen, self.color, (self.rectx, self.recty, 60, 5))
         if self.cooltime >= 50:
@@ -460,7 +493,7 @@ class Shiled_count:
     def update(self, screen: pg.Surface, score, use):
         screen.blit(self.shiled, self.rect2)
         self.count = score // use
-        self.image = self.font.render(f"{score // use}", 0, self.color)
+        self.image = self.font.render(f"{score // use // 5}", 0, self.color)
         screen.blit(self.image, self.rect)
 
 
@@ -507,6 +540,7 @@ def main():
     hp_bar = HPBar(bird)
     bombs = pg.sprite.Group()
     beams = pg.sprite.Group()
+    swords=pg.sprite.Group()
     exps = pg.sprite.Group()
     emys = pg.sprite.Group()
     bosses = pg.sprite.Group()
@@ -538,7 +572,8 @@ def main():
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE and cooltime.cooltime == 0:
                 beams.add(Beam(bird))
                 cooltime.star_ct()
-                
+            if event.type == pg.KEYDOWN and event.key == pg.K_LSHIFT:
+                swords.add(Sword(bird, 10))   
             if event.type == pg.KEYDOWN and event.key == pg.K_TAB and achievement.score // achievement.shield >= 5:
                 shields.add(Shield(bird))
                 achievement.shield += 1
@@ -546,8 +581,6 @@ def main():
         screen.blit(bg_img2, [1600 -x, 0])
         screen.blit(bg_img, [3199 -x, 0])
         screen.blit(bg_img, [-x, 0])
-
-        print(cooltime.cooltime)
             
         if ten%2 == 0 and ten != 0:
             bosses.add(BOSS())
@@ -560,6 +593,8 @@ def main():
                 bombs.add(Bomb(boss, bird))
                 #Bomb.bomb_size(10)
         
+        if tmr%200 == 0:
+            emys.add(Enemy())
         if tmr+100 %200 == 0 and difficult.difficulty >= 5:
             emys.add(Enemy())
         if tmr%1000 == 0 and difficult.difficulty < 10:
@@ -582,11 +617,22 @@ def main():
             boss.hp_set(-1)
             exps.add(Explosion(boss, 100))
             achievement.score += 1
+            points.add(Point(boss, 0, 0.2))
 
         for bomb in pg.sprite.groupcollide(bombs, beams, True, True).keys():
             exps.add(Explosion(bomb, 100))  # 爆発エフェクト
-            score.score_up(1)  # 1点アップ
 
+        for emy in pg.sprite.groupcollide(emys, swords, True, False).keys():
+            exps.add(Explosion(emy, 100))  # 爆発エフェクト
+            points.add(Point(emy, 0, 0.2))
+            achievement.score += 1
+        for bomb in pg.sprite.groupcollide(bombs, swords,True, False).keys():
+            exps.add(Explosion(bomb, 50))  # 爆発エフェクト
+            
+        for boss in pg.sprite.groupcollide(bosses, swords, False, True).keys():
+            boss.hp_set(-1)
+            exps.add(Explosion(boss, 100))
+            achievement.score += 1
         
         if len(pg.sprite.spritecollide(bird, points, True)) != 0:
             score.score_up(10)  # 10点アップ
@@ -609,6 +655,8 @@ def main():
         hp_bar.update(screen)
         beams.update()
         beams.draw(screen)
+        swords.update(bird)
+        swords.draw(screen)
         emys.update()
         emys.draw(screen)
         bosses.update()
