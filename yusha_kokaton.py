@@ -195,6 +195,7 @@ class Sword(pg.sprite.Sprite):
         """
         剣をこうかとんの移動量に合わせて移動させる
         時間がたったら剣をしまうようにする
+        引数1 bird: 剣の向き
         """
         self.rect.centery = bird.rect.centery+bird.rect.height*self.vy
         self.rect.centerx = bird.rect.centerx+bird.rect.width*self.vx
