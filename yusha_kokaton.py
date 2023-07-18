@@ -415,7 +415,7 @@ def main():
     bg_img2 = pg.transform.flip(bg_img, 1, 0)
     score = Score()
     difficult = Difficult()
-    cooltime = Cooltime()
+    cooltime = Cooltime() 
     achievement = Achievement()
     shield_count = Shiled_count()
 
