@@ -211,9 +211,9 @@ class Enemy(pg.sprite.Sprite):
         super().__init__()
         self.image = random.choice(__class__.imgs)
         self.rect = self.image.get_rect()
-        self.rect.center = random.randint(10, WIDTH-10), 0
+        self.rect.center = random.randint(50, WIDTH-50), 0
         self.vy = +6
-        self.bound = random.randint(50, HEIGHT-20)  # 停止位置
+        self.bound = random.randint(20, HEIGHT-20)  # 停止位置
         self.state = "down"  # 降下状態or停止状態
         self.interval = random.randint(50, 300)  # 爆弾投下インターバル
 
@@ -278,26 +278,138 @@ class Shield(pg.sprite.Sprite):
         引数1 xy：こうかとんの座標
         """
         super().__init__()
-        self.image = pg.transform.rotozoom(pg.image.load(f"ex05/fig/shield.png"), 0, 0.3)
+        imge3 = pg.transform.rotozoom(pg.image.load(f"ex05/fig/shield.png"), 0, 0.3)
+        imge2 = pg.transform.rotozoom(pg.image.load(f"ex05/fig/shield2.png"), 0, 0.3)
+        imge1 = pg.transform.rotozoom(pg.image.load(f"ex05/fig/shield3.png"), 0, 0.3)
+        self.images = [imge1, imge1, imge2, imge3]
+        self.image = pg.transform.rotozoom(pg.image.load(f"ex05/fig/shield2.png"), 0, 0.3)
         self.rect = self.image.get_rect()
         self.rect.center = bird.rect.center
-        self.life = 250
+        self.life = 3
 
     def update(self):
         """
         重力球のライフを減少させる
         引数 screen：画面Surface
         """
-        self.life -= 1
+        self.image = self.images[self.life]
         if self.life <= 0:
             self.kill()
+
+    def life_change(self , num):
+        self.life -= num
+
+
+class Difficult:
+    """
+    時間に応じて難易度を表示する関数
+    """
+    def __init__(self):
+        self.font = pg.font.Font(None, 50)
+        self.color = (255, 0, 0)
+        self.difficulty = 0
+        self.image = self.font.render(f"Level: {self.difficulty}", 0, self.color)
+        self.rect = self.image.get_rect()
+        self.rect.center = 100, HEIGHT-90
+
+    def difficult_up(self, add):
+        self.difficulty += add
+
+    def update(self, screen: pg.Surface):
+        self.image = self.font.render(f"Level: {self.difficulty}", 0, self.color)
+        screen.blit(self.image, self.rect)
+
+
+class Cooltime:
+    """
+    射撃のクールタイム表示
+    """
+    def __init__(self):
+        self.font = pg.font.Font(None, 50)
+        self.colors = [(255, 0, 0), (255, 255, 0), (0, 255, 0)]
+        self.color = self.colors[2]
+        self.cooltime = 0
+        self.rect = 0, 0
+        self.view = -100
+
+    def star_ct(self):
+        self.cooltime = 1
+
+    def update(self, screen: pg.Surface, tmr, bird: Bird):
+        """
+        時間によって形と色が変わる四角形を表示する
+        """
+        self.rectx, self.recty = bird.rect.bottomleft
+        self.recty += 10
+        if self.cooltime >= 1:
+            self.cooltime += 1
+            if self.cooltime <= 20:
+                self.color = self.colors[0]
+                pg.draw.rect(screen, self.color, (self.rectx, self.recty, self.cooltime, 5))
+            elif self.cooltime > 20:
+                self.color = self.colors[1]
+                pg.draw.rect(screen, self.color, (self.rectx, self.recty, self.cooltime, 5))
+        if self.view + 50 >= tmr:
+            self.color = self.colors[2]
+            pg.draw.rect(screen, self.color, (self.rectx, self.recty, 60, 5))
+        if self.cooltime >= 50:
+            self.cooltime = 0
+            self.view = tmr
+        
+
+class Achievement:
+    """
+    実績機能
+    """
+    def __init__(self):
+        self.score = 0
+        self.shot = 0
+        self.block = 0
+        self.shield = 1
+
+    def score_up(self):
+        self.score += 1
+        self.shot += 1
+        self.block += 1
+
+    def update(self, screen: pg.Surface):
+        if self.score >= 500:
+            print("すごい")
+
+
+class Shiled_count:
+    """
+    シールドの個数を表示する
+    """
+    def __init__(self):
+        self.font = pg.font.Font(None, 50)
+        self.color = (0, 0, 0)
+        self.count = 0
+        self.shiled = pg.transform.rotozoom(pg.image.load(f"ex05/fig/shield.png"), 0, 0.2)
+        self.rect2 = self.shiled.get_rect()
+        self.rect2.center = WIDTH-80, HEIGHT-60
+        self.image = self.font.render(f"{self.count}", 0, self.color)
+        self.rect = self.image.get_rect()
+        self.rect.center = WIDTH-80, HEIGHT-60
+
+    def update(self, screen: pg.Surface, score, use):
+        screen.blit(self.shiled, self.rect2)
+        self.count = score // use
+        self.image = self.font.render(f"{self.count}", 0, self.color)
+        screen.blit(self.image, self.rect)
+
 
 
 def main():
     pg.display.set_caption("勇者こうかとん")
     screen = pg.display.set_mode((WIDTH, HEIGHT))
     bg_img = pg.image.load("ex04/fig/pg_bg.jpg")
+    bg_img2 = pg.transform.flip(bg_img, 1, 0)
     score = Score()
+    difficult = Difficult()
+    cooltime = Cooltime()
+    achievement = Achievement()
+    shield_count = Shiled_count()
 
     bird = Bird(3, (900, 400))
     bombs = pg.sprite.Group()
@@ -307,40 +419,43 @@ def main():
     points = pg.sprite.Group()
     shields = pg.sprite.Group()
 
-    mode = 0
-    cooltime = 0
+
     tmr = 0
+    x = 0
     clock = pg.time.Clock()
     while True:
         key_lst = pg.key.get_pressed()
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 return 0
-            if event.type == pg.KEYDOWN and event.key == pg.K_SPACE and cooltime == 0:
+            if event.type == pg.KEYDOWN and event.key == pg.K_SPACE and cooltime.cooltime == 0:
                 beams.add(Beam(bird))
-                cooltime = 1
-        screen.blit(bg_img, [0, 0])
+                cooltime.star_ct()
+            if event.type == pg.KEYDOWN and event.key == pg.K_TAB and achievement.score // achievement.shield >= 5:
+                shields.add(Shield(bird))
+                achievement.shield += 1
 
-        if tmr%200 == 0:  # 200フレームに1回，敵機を出現させる
+        screen.blit(bg_img2, [1600 -x, 0])
+        screen.blit(bg_img, [3199 -x, 0])
+        screen.blit(bg_img, [-x, 0])
+
+        if tmr%200 - 10*(difficult.difficulty - 1) == 0:  # 200フレームに1回，敵機を出現させる
             emys.add(Enemy())
-            mode += 1
-        if mode >= 10 and tmr%300 == 0:
+        if tmr+100 %200 == 0 and difficult.difficulty >= 5:
             emys.add(Enemy())
-        if mode >= 20 and tmr%350 == 0:
-            emys.add(Enemy())
+        if tmr%1000 == 0 and difficult.difficulty < 10:
+            difficult.difficult_up(1)
 
         for emy in emys:
             if emy.state == "stop" and tmr%emy.interval == 0:
                 # 敵機が停止状態に入ったら，intervalに応じて爆弾投下
                 bombs.add(Bomb(emy, bird))
-            if event.type == pg.KEYDOWN and event.key == pg.K_TAB and score.score >= 50:
-                shields.add(Shield(bird))
-                score.score -= 50
 
         for emy in pg.sprite.groupcollide(emys, beams, True, True).keys():
             exps.add(Explosion(emy, 100))  # 爆発エフェクト
             points.add(Point(emy, 0, 0.2))
             bird.change_img(6, screen)  # こうかとん喜びエフェクト
+            achievement.score += 1
 
         for bomb in pg.sprite.groupcollide(bombs, beams, True, True).keys():
             exps.add(Explosion(bomb, 50))  # 爆発エフェクト
@@ -356,14 +471,10 @@ def main():
             time.sleep(2)
             return
         
-        for bomb in pg.sprite.groupcollide(bombs, shields, True, False).keys():
-            exps.add(Explosion(bomb, 50))  # 爆発エフェクト
-
-        if cooltime >= 1:
-            cooltime += 1
-        if cooltime >= 50:
-            cooltime = 0
-
+        for shield in pg.sprite.groupcollide(shields, bombs, False, True).keys():
+            Shield.life_change(shield, 1)
+        
+        
         bird.update(key_lst, screen)
         beams.update()
         beams.draw(screen)
@@ -376,11 +487,18 @@ def main():
         exps.update()
         exps.draw(screen)
         score.update(screen)
+        shield_count.update(screen, achievement.score, achievement.shield)
+        difficult.update(screen)
+        cooltime.update(screen, tmr, bird)
         shields.update()
         shields.draw(screen)
         pg.display.update()
         tmr += 1
         clock.tick(50)
+        x += 1
+        
+        if x > 3199:
+            x = 0
 
 
 if __name__ == "__main__":
