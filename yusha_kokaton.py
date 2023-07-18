@@ -141,6 +141,7 @@ class Bomb(pg.sprite.Sprite):
             self.kill()
 
 
+
 class Beam(pg.sprite.Sprite):
     """
     ビームに関するクラス
@@ -170,6 +171,36 @@ class Beam(pg.sprite.Sprite):
         if check_bound(self.rect) != (True, True):
             self.kill()
 
+class Sword(pg.sprite.Sprite):
+    """
+    剣に関するクラス
+    """
+    def __init__(self, bird: Bird, life: int):
+        """
+        剣画像surfaceを生成する
+        引数1 bird: 剣を使うこうかとん
+        引数2 life: 剣をしまう時間
+        """
+        super().__init__()
+        self.vx, self.vy = bird.get_direction()
+        angle = math.degrees(math.atan2(-self.vy, self.vx))
+        self.image = pg.transform.rotozoom(pg.image.load("ex05/fig/sword-3.png"), angle, 0.3)
+        self.vx = math.cos(math.radians(angle))
+        self.vy = -math.sin(math.radians(angle))
+        self.rect = self.image.get_rect()
+        self.rect.centery = bird.rect.centery+bird.rect.height*self.vy
+        self.rect.centerx = bird.rect.centerx+bird.rect.width*self.vx
+        self.life=life
+    def update(self,bird: Bird):
+        """
+        剣をこうかとんの移動量に合わせて移動させる
+        時間がたったら剣をしまうようにする
+        """
+        self.rect.centery = bird.rect.centery+bird.rect.height*self.vy
+        self.rect.centerx = bird.rect.centerx+bird.rect.width*self.vx
+        self.life -= 1
+        if self.life < 0:
+            self.kill()
 
 class Explosion(pg.sprite.Sprite):
     """
@@ -258,6 +289,7 @@ def main():
     bird = Bird(3, (900, 400))
     bombs = pg.sprite.Group()
     beams = pg.sprite.Group()
+    swords=pg.sprite.Group()
     exps = pg.sprite.Group()
     emys = pg.sprite.Group()
 
@@ -270,8 +302,9 @@ def main():
                 return 0
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
                 beams.add(Beam(bird))
+            if event.type == pg.KEYDOWN and event.key == pg.K_LSHIFT:
+                swords.add(Sword(bird, 10))
         screen.blit(bg_img, [0, 0])
-
         if tmr%200 == 0:  # 200フレームに1回，敵機を出現させる
             emys.add(Enemy())
 
@@ -289,6 +322,10 @@ def main():
             exps.add(Explosion(bomb, 50))  # 爆発エフェクト
             score.score_up(1)  # 1点アップ
 
+        for sword in pg.sprite.groupcollide(swords, emys, True, True).keys():
+            sword.kill()
+        for swordb in pg.sprite.groupcollide(swords, bombs,True, True).keys():
+            swordb.kill()
         if len(pg.sprite.spritecollide(bird, bombs, True)) != 0:
             bird.change_img(8, screen) # こうかとん悲しみエフェクト
             score.update(screen)
@@ -299,6 +336,8 @@ def main():
         bird.update(key_lst, screen)
         beams.update()
         beams.draw(screen)
+        swords.update(bird)
+        swords.draw(screen)
         emys.update()
         emys.draw(screen)
         bombs.update()
